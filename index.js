@@ -5,35 +5,22 @@ const app = express();
 const port = 3000;
 
 app.use(express.json());
+app.use('/qr-codes', express.static('qr-codes'));
 
-app.post('/generate', (req, res) => {
-    const url = req.body.url;
+app.get('/', (req, res, next) => {
+    res.send('Hello');
+})
+
+app.get('/generate/:url', (req, res) => {
+    const url = req.params.url;
+    if (!url) {
+        return res.status(400).json({ error: 'URL parameter is missing' });
+    }
     const currentDate = new Date().toISOString().replace(/[:.-]/g, '_');
     let filename = `qr-codes/qr-${currentDate}.png`;
 
-    qr.toFile(filename, url,{ errorCorrectionLevel: 'H', width: 300, version: 10 },  (err) => {
-        if (err) {
-            console.error('Error generating QR code:', err);
-            res.status(500).send('Internal Server Error');
-        } else {
-            fs.readFile(filename, (fileErr, fileData) => {
-                if (fileErr) {
-                    console.error('Error reading QR code file:', fileErr);
-                    res.status(500).send('Internal Server Error');
-                } else {
-                    // Set the response content type and send the image
-                    res.setHeader('Content-Type', 'image/png');
-                    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
-                    res.send(fileData);
-
-                    fs.unlink(filename, (deleteErr) => {
-                        if (deleteErr) {
-                            console.error('Error deleting QR code file:', deleteErr);
-                        }
-                    });
-                }
-            });
-        }
+    qr.toFile(filename, url, {errorCorrectionLevel: 'H', width: 300, version: 10}, (err) => {
+            res.json({'image': `http://localhost:3000/${filename}`});
     });
 });
 
