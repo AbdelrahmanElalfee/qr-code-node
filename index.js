@@ -2,9 +2,11 @@ const express = require('express');
 const qr = require("qrcode");
 const fs = require('fs');
 const app = express();
+const cors = require('cors');
 const port = 3000;
 
 app.use(express.json());
+app.use(cors());
 app.use('/qr-codes', express.static('qr-codes'));
 
 app.get('/', (req, res, next) => {
@@ -20,7 +22,7 @@ app.get('/generate/:url', (req, res) => {
     let filename = `qr-codes/qr-${currentDate}.png`;
 
     qr.toFile(filename, url, {errorCorrectionLevel: 'H', width: 300, version: 10}, (err) => {
-            res.json({'image': `https://qr-69sk.onrender.com/${filename}`});
+            res.json({'image': filename});
     });
 });
 
